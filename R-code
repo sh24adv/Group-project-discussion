@@ -1,0 +1,38 @@
+df <- read.csv("Fat_Supply_Quantity_Data.csv")
+> library(ggplot2)
+> 
+> ggplot(df, aes(x = Animal.Products, y = Animal.fats)) +
++     geom_point(color = "#4CAF50", size = 3, alpha = 0.8) +
++     geom_smooth(method = "lm", se = FALSE, color = "#FF7043", size = 1.2) +
++     labs(
++         title = "Scatterplot: Protein vs Fat Supply Across Countries",
++         x = "Protein Supply Proxy: Animal Products (kg/capita/year)",
++         y = "Fat Supply Proxy: Animal Fats (kg/capita/year)"
++     ) +
++     theme_minimal(base_size = 14)
+`geom_smooth()` using formula = 'y ~ x'
+> ggplot(df, aes(x = Animal.fats)) +
++     geom_histogram(
++         aes(y = ..density..),
++         bins = 25,
++         fill = "#64B5F6",
++         color = "black",
++         alpha = 0.8
++     ) +
++     stat_function(
++         fun = dnorm,
++         args = list(
++             mean = mean(df$Animal.fats, na.rm = TRUE),
++             sd = sd(df$Animal.fats, na.rm = TRUE)
++         ),
++         color = "#E53935",
++         size = 1.2
++     ) +
++     labs(
++         title = "Histogram of Fat Supply (Animal Fats) with Normal Curve",
++         x = "Animal Fats (kg/capita/year)",
++         y = "Density"
++     ) +
++     theme_minimal(base_size = 14)
+
+
