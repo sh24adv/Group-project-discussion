@@ -49,9 +49,6 @@ Null Hypothesis: Protein supply and fat supply have no correlation across the co
 
 
 Alternative Hypothesis: Protein supply and the fat supply across countries show a statistically significant correlation.
-
-
-
 Conclusions 
 
 
