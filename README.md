@@ -12,7 +12,7 @@ Group members
 
 2.	Sneha padamati
 
-3.	Krishna mohan
+3.	Krishna Mohan Reddy Kasireddy
 
 4.	Ganesh banoth
 
