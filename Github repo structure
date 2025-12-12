@@ -1,0 +1,12 @@
+smartride-team-research/        ← root repo
+├─ data/
+│  └─ Fat_Supply_Quantity_Data.csv   # (PLACEHOLDER: add your CSV here)
+├─ outputs/
+│  ├─ scatter_protein_vs_fat.png
+│  ├─ histogram_fat.png
+│  └─ correlation_results.txt
+├─ R/
+│  └─ analysis.R
+├─ README.md
+├─ .gitignore
+
