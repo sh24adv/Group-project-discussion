@@ -57,4 +57,4 @@ Conclusions
 
 
 A significant positive correlation (r = 0.78) between the supply of protein from animal products and the supply of fat from animal fats across nations was found by the Pearson correlation analysis.  The correlation is statistically significant, as indicated by the p-value (<0.001).  Histograms supported the test's validity by confirming an approximate normal distribution .  This implies that nations with greater protein availability also typically have higher fat availability, which reflects global trends in the supply of macronutrients 
-
+ 
