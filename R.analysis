@@ -1,0 +1,114 @@
+# analysis.R
+# Reproducible analysis: Protein vs Fat supply correlation
+# Usage: set working directory to repo root, ensure data/Fat_Supply_Quantity_Data.csv is present,
+# then run: Rscript R/analysis.R
+
+# --- Setup --------------------------------------------------------------------
+suppressPackageStartupMessages({
+  library(ggplot2)
+  library(readr)
+  library(dplyr)
+  library(broom)   # tidy test output
+})
+
+# Create output folder if missing
+if (!dir.exists("outputs")) dir.create("outputs")
+
+# --- Parameters ----------------------------------------------------------------
+data_file <- "data/Fat_Supply_Quantity_Data.csv"   # expected CSV file
+scatter_out <- "outputs/scatter_protein_vs_fat.png"
+hist_out    <- "outputs/histogram_fat.png"
+stats_out   <- "outputs/correlation_results.txt"
+
+# --- Load data -----------------------------------------------------------------
+if (!file.exists(data_file)) {
+  stop("Data file not found: ", data_file, "\nPlease add your CSV to the data/ folder.")
+}
+df <- read_csv(data_file, col_types = cols(.default = "c")) %>%
+  # attempt to coerce to numeric for the two key columns
+  mutate(
+    Animal.Products = as.numeric(gsub(",", ".", Animal.Products)),
+    Animal.fats = as.numeric(gsub(",", ".", Animal.fats))
+  )
+
+# Quick check
+n_obs <- sum(!is.na(df$Animal.Products) & !is.na(df$Animal.fats))
+message("Observations with both variables present: ", n_obs)
+
+# --- Data cleaning / diagnostics -----------------------------------------------
+# Optionally remove rows with missing values for the two columns
+df_clean <- df %>% filter(!is.na(Animal.Products), !is.na(Animal.fats))
+
+# Basic summary
+summary_stats <- df_clean %>%
+  summarise(
+    n = n(),
+    mean_protein = mean(Animal.Products, na.rm = TRUE),
+    sd_protein   = sd(Animal.Products, na.rm = TRUE),
+    mean_fat     = mean(Animal.fats, na.rm = TRUE),
+    sd_fat       = sd(Animal.fats, na.rm = TRUE)
+  )
+
+# --- Visualisations ------------------------------------------------------------
+# Scatter plot with linear fit
+p1 <- ggplot(df_clean, aes(x = Animal.Products, y = Animal.fats)) +
+  geom_point(size = 3, alpha = 0.8) +
+  geom_smooth(method = "lm", se = FALSE, size = 1.2) +
+  labs(
+    title = "Scatterplot: Protein (Animal Products) vs Fat (Animal Fats)",
+    x = "Protein Supply Proxy: Animal Products",
+    y = "Fat Supply Proxy: Animal Fats"
+  ) +
+  theme_minimal(base_size = 14)
+
+ggsave(scatter_out, p1, width = 8, height = 6, dpi = 300)
+message("Saved scatterplot to ", scatter_out)
+
+# Histogram with normal curve for Animal.fats
+mean_fat <- mean(df_clean$Animal.fats, na.rm = TRUE)
+sd_fat   <- sd(df_clean$Animal.fats, na.rm = TRUE)
+
+p2 <- ggplot(df_clean, aes(x = Animal.fats)) +
+  geom_histogram(aes(y = ..density..), bins = 25, color = "black", alpha = 0.8) +
+  stat_function(fun = dnorm, args = list(mean = mean_fat, sd = sd_fat), size = 1.0) +
+  labs(
+    title = "Histogram of Fat Supply (Animal Fats) with Normal Curve",
+    x = "Animal Fats",
+    y = "Density"
+  ) +
+  theme_minimal(base_size = 14)
+
+ggsave(hist_out, p2, width = 8, height = 6, dpi = 300)
+message("Saved histogram to ", hist_out)
+
+# --- Statistical test ----------------------------------------------------------
+# Pearson correlation and test
+# Use cor.test to get r, p-value, and confidence interval
+test_result <- cor.test(df_clean$Animal.Products, df_clean$Animal.fats, method = "pearson")
+
+# Tidy result
+tidy_res <- broom::tidy(test_result)
+
+# Write results to file
+cat("Pearson correlation test: Protein (Animal.Products) vs Fat (Animal.fats)\n",
+    "------------------------------------------------------------\n",
+    file = stats_out)
+
+cat(sprintf("n (pairs) = %d\n", tidy_res$estimate %>% length()), file = stats_out, append = TRUE)
+cat(sprintf("correlation (estimate) = %.4f\n", tidy_res$estimate), file = stats_out, append = TRUE)
+cat(sprintf("t = %.4f\n", test_result$statistic), file = stats_out, append = TRUE)
+cat(sprintf("df = %.0f\n", test_result$parameter), file = stats_out, append = TRUE)
+cat(sprintf("p-value = %.4g\n", tidy_res$p.value), file = stats_out, append = TRUE)
+cat(sprintf("95%% CI = [%.4f, %.4f]\n",
+            tidy_res$conf.low, tidy_res$conf.high), file = stats_out, append = TRUE)
+
+# Append summary stats
+cat("\nSummary statistics:\n", file = stats_out, append = TRUE)
+write.table(summary_stats, file = stats_out, sep = "\t", row.names = FALSE, col.names = TRUE, append = TRUE)
+
+message("Saved correlation results to ", stats_out)
+
+# --- Session info for reproducibility -----------------------------------------
+session_info_file <- "outputs/session_info.txt"
+capture.output(sessionInfo(), file = session_info_file)
+message("Saved session info to ", session_info_file)
